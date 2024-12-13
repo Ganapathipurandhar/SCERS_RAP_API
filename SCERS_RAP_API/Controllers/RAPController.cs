@@ -14,57 +14,37 @@ namespace SCERS_RAP_API.Controllers
 		[HttpPost("Run")]
 		public string RPARun()
 		{
-			//var timer = new Stopwatch();
-			//timer.Start();
-
 			RAPService RAP = new RAPService();
-			//var test = RAP.Run();
-			return "value";
-			//timer.Stop();
-
-			//TimeSpan elapsedTime = timer.Elapsed;
-			//Console.WriteLine($"Program execution time: {elapsedTime.TotalSeconds} seconds");
-			//return $"Program execution time: {elapsedTime.TotalSeconds} seconds";
-
+			var test = RAP.Run();
+			return test;
 		}
 
 		// GET: api/<RAPController>
 		[HttpGet]
 		public IEnumerable<string> Get()		
 		{
-			var timer = new Stopwatch();
-			timer.Start();
-			
-			
-			
 			RAPService RAP = new RAPService();
-			RAP.Run();
-			timer.Stop();
-
-			TimeSpan elapsedTime = timer.Elapsed;
-			Console.WriteLine($"Program execution time: {elapsedTime.TotalSeconds} seconds");
-			return new string[] { $"Program execution time: {elapsedTime.TotalSeconds} seconds", "value2" };
+			var test = RAP.Run();			
+			return new string[] { test, "value2" };
 		}	
 
 
-	
+		//// POST api/<RAPController>
+		//[HttpPost]
+		//public void Post([FromBody] string value)
+		//{
+		//}
 
-		// POST api/<RAPController>
-		[HttpPost]
-		public void Post([FromBody] string value)
-		{
-		}
+		//// PUT api/<RAPController>/5
+		//[HttpPut("{id}")]
+		//public void Put(int id, [FromBody] string value)
+		//{
+		//}
 
-		// PUT api/<RAPController>/5
-		[HttpPut("{id}")]
-		public void Put(int id, [FromBody] string value)
-		{
-		}
-
-		// DELETE api/<RAPController>/5
-		[HttpDelete("{id}")]
-		public void Delete(int id)
-		{
-		}
+		//// DELETE api/<RAPController>/5
+		//[HttpDelete("{id}")]
+		//public void Delete(int id)
+		//{
+		//}
 	}
 }
