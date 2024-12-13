@@ -1,0 +1,6 @@
+@APINOCONTROLLER_HostAddress = http://localhost:5139
+
+GET {{APINOCONTROLLER_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

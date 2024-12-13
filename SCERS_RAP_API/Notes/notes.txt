@@ -1,0 +1,73 @@
+**************************************************************************
+How to run?
+**************************************************************************
+1. The input values for the application are in .\Data\PreLoad.json - Input values are
+	same as the hightlighted/bold values in Excel sheet "Work". Update and save them.
+2. Run the application after updating the JSON
+3. Outputs:
+	- LifeTable.csv (life table data, it has about 30 columns and 150 rows that can be compared with the sample excel).
+		It does not appear in the order it appears in the sample excel.
+	- output.json (all data in work/factor/calc including lifetable data is in it)
+	- Letter.html (Letter that matches the "Letter" sheet.)
+
+**************************************************************************
+Test Scenario for other options (not to be confuse with retirment options)
+**************************************************************************
+Retirement Type : SR/NSCD/SCD - the current excel is for SR, we need one with NSCD and SCD
+MemberShip : General/Safety - the current excel is for General we need one for safety
+							- Member is "male", we need one for "female"
+Tier (1,2,3) : the current excel is for Tier 2-3 we need to test for other 2 tier ( external documents say there is tier 4) 
+Money Purchase (Y/N): the current excel is for N we need one with Y
+Relationship : we have implemented for "spouse", how does it work for "partner"? or when there is not relationship 
+				or beneficiary (this impacts on life table)
+
+**************************************************************************
+Doubts and Questions
+**************************************************************************
+* Work!B20: Integrated Service Computation divides Days by 261 which is the number of working days in a year. However the condition to check for Retirement Type = SR does nothing
+* Factor!B17: References B10 which at this point looks like its empty and the condition will alway be false for source
+* Factor!K2 : Where is the rounding factor ("0.002739") from, we couldn't find any reference to this. Can this change or is it static or will it depend on any other factor
+* SSMod!: Is not referenced in any other part of the excel, where exactly is it used and for what?
+
+*Factor! ETx and ETy uses 0.5 multiplier (there is not expanition for this). Will it change and should we pass as refrence value
+*Factor!K1 : "factor to convert frequency of payment" is also 0.5 and
+*Factor!B10 : "Continuance Under Option 4" is also 0.5 are all of the above related or will they change on their own
+
+* I couldn't find external source 1981 General Disability Mortality Table
+* GAM94 and GAF94 don't match the SOA table in the excel after age 115
+* Z142 I think computation is incorrect
+
+**************************************************************************
+Macros
+**************************************************************************
+There are three macros and only one of them was functional, we could not find when the others get triggered
+Macro 1: This is implemented
+*Factor 1: We could not find when it gets triggered, based on the code none of the columns that it refers to makes sense
+*Factor 2: We could not find when it gets triggered, based on the code none of the columns that it refers to makes sense
+
+**ideally we need more excel for different scenarios
+
+
+**************************************************************************
+External resources
+**************************************************************************
+Sacramento County Employees' Retirement System Factors for modification as per Section 31810
+https://www.scers.org/sites/main/files/file-attachments/service_retirement_application_packet_0.pdf
+
+https://www.scers.gov/sites/main/files/file-attachments/final_legacy_handbook_2024.pdf?1716592893
+
+ERF Fractions Tables:
+https://sacrs.org/Portals/36/assets/File/CERL/RetirementLawBook-2020-webversion.pdf?ver=2020-01-02-165408-640
+ERF Fractions
+31664 (Page 230+ on PDF page no. is 189+)
+31676_10 (Page 240+ page no. 199+)
+31752A ( Page 319+ page no. 278+)
+31752B ( Page 319+ page no. 278+)
+
+Factor Calculation:
+https://www.ssa.gov/oact/HistEst/CohLifeTables/LifeTableDefinitions.pdf
+
+GAM: Group Annuity Mortality Table 
+https://www.soa.org/globalassets/assets/library/research/transactions-of-society-of-actuaries/1990-95/1995/january/tsa95v4722.pdf
+- Page 22 : 1994 Group Annuity Mortality Table (also known as the UP-94 Mortality Table) for males
+- I couldn't find 1981 General Disability Mortality Table
