@@ -1,0 +1,128 @@
+def COLOR_MAP = [
+    'SUCCESS': 'good', 
+    'FAILURE': 'danger',
+]
+
+pipeline {
+    agent officeAscDotnet
+
+    tools {
+        // Ensure that Docker is installed and available in the environment
+        dockerTool 'Docker' // Make sure the 'Docker' tool is configured in Jenkins
+        msbuild 'MSBUILD2022'  // Ensure MSBuild tool is available for building .NET projects
+    }
+
+    environment {
+        DOCKER_REGISTRY = 'gpurandhar'  
+        DOCKER_IMAGE = 'scers-rap-app'  
+        AWS_BUCKET = 'splicescers'
+        AWS_REGION = 'us-east-1'
+        BUILD_DIR = '/home/ubuntu/Jenkins'  
+        SONARQUBE_SERVER = 'https://sonarcloud.io'  // URL for SonarCloud
+        SONAR_PROJECT_KEY = 'Ganapathipurandhar_SCERS_RAP_API'  
+        SONAR_ORG = 'scers-rap-api'  
+        SONAR_TOKEN = credentials('sonarcloud-token')  
+    }
+
+   stages {
+        stage('Prepare SonarCloud Analysis') {
+            steps {
+                echo "Preparing for SonarCloud analysis"
+                script {
+                    // Install SonarScanner for MSBuild if necessary
+                    // Running SonarCloud analysis
+                    bat """
+                        dotnet tool install --global dotnet-sonarscanner
+                    """
+                }
+            }
+        }
+
+        stage('SonarCloud Analysis') {
+            steps {
+                echo "Running SonarCloud Analysis"
+                script {
+                    // Run SonarScanner for MSBuild to analyze the project
+                    bat """
+                        dotnet sonarscanner begin /k:${SONAR_PROJECT_KEY} /d:sonar.host.url=${SONARQUBE_SERVER} /d:sonar.login=${SONAR_TOKEN} /d:sonar.organization=${SONAR_ORG}
+                    """
+                }
+            }
+        } 
+
+        stage('Build') {
+            steps {
+                echo "Building the project"
+                // Using 'dir' to change the working directory for build
+                dir("${BUILD_DIR}") {
+                    sh 'dotnet build SCERS-RAP.sln --configuration Release'
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests"
+                sh 'dotnet test ${BUILD_DIR}/SCERS_RAP.csproj --configuration Release'
+            }
+        }
+
+        stage('SonarCloud End Analysis') {
+            steps {
+                echo "Ending SonarCloud analysis"
+                script {
+                    // Run SonarScanner for MSBuild to end the analysis
+                    bat """
+                        dotnet sonarscanner end /d:sonar.login=${SONAR_TOKEN}
+                    """
+                }
+            }
+        } 
+
+        stage('Docker Build and Push') {
+            steps {
+                script {
+                    echo "Building and pushing Docker image to registry"
+                    
+                    // Build Docker image
+                    sh """
+                        docker build -t ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_NUMBER} ${BUILD_DIR}
+                    """
+                    
+                    // Log into Docker registry (Docker Hub or AWS ECR)
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        sh """
+                            echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin
+                        """
+                    }
+                    
+                    // Push Docker image to the Docker registry
+                    sh """
+                        docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                    """
+                    
+                    echo "Docker image pushed to ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                // Send Slack notifications
+                echo 'Sending Slack Notifications...'
+
+                slackSend(
+                    channel: '#splicescers',
+                    color: COLOR_MAP[currentBuild.currentResult],
+                    message: """
+                    *${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} 
+                    More info at: ${env.BUILD_URL}
+                    Docker Image available at: ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:${env.BUILD_NUMBER}
+                    """
+                )
+            }
+        }
+    }
+}
